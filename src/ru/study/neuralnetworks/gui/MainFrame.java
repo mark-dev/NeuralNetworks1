@@ -3,13 +3,18 @@ package ru.study.neuralnetworks.gui;
 import edu.uci.ics.jung.algorithms.layout.KKLayout;
 import edu.uci.ics.jung.graph.DirectedSparseGraph;
 import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
 import edu.uci.ics.jung.visualization.VisualizationImageServer;
+import edu.uci.ics.jung.visualization.VisualizationViewer;
 import org.apache.commons.collections15.Transformer;
 import ru.study.neuralnetworks.entity.ComporatorInfo;
 import ru.study.neuralnetworks.entity.NeuronEdge;
 import ru.study.neuralnetworks.managers.ComporatorNetworkBuilder;
 import ru.study.neuralnetworks.managers.NeuroNetworkSolver;
+import ru.study.neuralnetworks.neurons.BlackNeuron;
 import ru.study.neuralnetworks.neurons.Neuron;
+import ru.study.neuralnetworks.neurons.VirtualNeuron;
+import ru.study.neuralnetworks.neurons.WhiteNeuron;
 
 import javax.swing.*;
 import java.awt.*;
@@ -51,9 +56,6 @@ public class MainFrame extends JFrame {
         Font font = resultLabel.getFont();
         Font boldFont = new Font(font.getFontName(), Font.BOLD, font.getSize());
         resultLabel.setFont(boldFont);
-        //autoscroll
-        sp = new JScrollPane();
-        sp.setBackground(lightYellow);
         //set bg Color
         panelTop.setBackground(lightBlue);
         panelCenter.setBackground(lightYellow);
@@ -64,8 +66,8 @@ public class MainFrame extends JFrame {
         panelCenter.setPreferredSize(new Dimension(WIDTH, (int) (0.8 * HEIGHT)));
         panelBottom.setPreferredSize(new Dimension(WIDTH, (int) (0.1 * HEIGHT)));
         fieldInput.setPreferredSize(new Dimension((int) (0.6 * WIDTH), (int) (0.08 * HEIGHT)));
-        buttonOk.setPreferredSize(new Dimension((int) (0.1 * WIDTH), (int) (0.08 * HEIGHT)));
-        buttonSetRandom.setPreferredSize(new Dimension((int) (0.1 * WIDTH), (int) (0.08 * HEIGHT)));
+        buttonOk.setPreferredSize(new Dimension((int) (0.12 * WIDTH), (int) (0.08 * HEIGHT)));
+        buttonSetRandom.setPreferredSize(new Dimension((int) (0.12 * WIDTH), (int) (0.08 * HEIGHT)));
         // borders
         panelTop.setBorder(BorderFactory.createEtchedBorder());
         //layouts
@@ -97,7 +99,6 @@ public class MainFrame extends JFrame {
         panelBottom.add(fieldInput);
         panelBottom.add(buttonOk);
         panelBottom.add(buttonSetRandom);
-        panelCenter.add(sp, BorderLayout.CENTER);
         //add panels to frame
         getContentPane().add(panelCenter, BorderLayout.CENTER);
         getContentPane().add(panelTop, BorderLayout.NORTH);
@@ -123,16 +124,17 @@ public class MainFrame extends JFrame {
         clearResult();
     }
 
-    private void buildNetwork(double[] values) {
-        if (vs != null) {
-            panelCenter.remove(vs);
+    private void buildNetwork(double[] values) throws Exception {
+        if (sp != null) {
+            panelCenter.remove(sp);
         }
         ComporatorNetworkBuilder comporatorNetworkBuilder = new ComporatorNetworkBuilder();
         ComporatorInfo ci = comporatorNetworkBuilder.buildFromDoubleArray(values);
         DirectedSparseGraph<Neuron, NeuronEdge> neuroNetwork = comporatorNetworkBuilder.getNetwork();
         new NeuroNetworkSolver(neuroNetwork).solve();
-        vs = getVIS(neuroNetwork);
-        panelCenter.add(vs);
+        VisualizationViewer vs = getVIS(neuroNetwork);
+        sp = new GraphZoomScrollPane(vs);
+        panelCenter.add(sp,BorderLayout.CENTER);
         panelCenter.setPreferredSize(vs.getPreferredSize());
         setResult(ci);
         pack();
@@ -168,21 +170,34 @@ public class MainFrame extends JFrame {
         resultLabel.setText("");
     }
 
-    private VisualizationImageServer getVIS(Graph g) {
-        VisualizationImageServer server = new VisualizationImageServer(new KKLayout(g), new Dimension(1000, 1000));
-        server.getRenderContext().setVertexLabelTransformer(new Transformer<Neuron, String>() {
+    private VisualizationViewer getVIS(Graph g) {
+        VisualizationViewer vv = new VisualizationViewer(new KKLayout(g), new Dimension(1000, 1000));
+        vv.getRenderContext().setVertexLabelTransformer(new Transformer<Neuron, String>() {
             @Override
             public String transform(Neuron n) {
                 return "[" + n.getLabel() + ";" + n.getOut() + "]";
             }
         });
-        server.getRenderContext().setEdgeLabelTransformer(new Transformer<NeuronEdge, String>() {
+        vv.getRenderContext().setEdgeLabelTransformer(new Transformer<NeuronEdge, String>() {
             @Override
             public String transform(NeuronEdge neuronEdge) {
                 return "" + neuronEdge.getWeight();
             }
         });
-        return server;
+        vv.getRenderContext().setVertexFillPaintTransformer(new Transformer<Neuron, Paint>() {
+
+            @Override
+            public Paint transform(Neuron neuron) {
+                if (neuron instanceof BlackNeuron)
+                    return new Color(101, 96, 96);
+                else if(neuron instanceof WhiteNeuron)
+                    return new Color(187, 247, 250);
+                else if(neuron instanceof VirtualNeuron)
+                    return new Color(240, 160, 65);
+                else return Color.RED;
+            }
+        });
+        return vv;
     }
 
     public static void main(String[] args) throws
@@ -198,10 +213,9 @@ public class MainFrame extends JFrame {
     private JPanel panelTop;
     private JPanel panelBottom;
     private JPanel panelCenter;
+    private GraphZoomScrollPane sp;
     private JButton buttonOk;
     private JButton buttonSetRandom;
-    private JScrollPane sp;
     private JTextField fieldInput;
     private JLabel resultLabel;
-    private VisualizationImageServer vs;
 }

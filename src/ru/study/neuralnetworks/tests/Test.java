@@ -20,7 +20,7 @@ import java.util.Random;
 public class Test {
     public static void main(String[] args) throws Exception {
 
-        for (int i = 2; i < 10000; i++) {
+        for (int i = 2; i < 1000; i++) {
             double[] array = fillRandom(i);
             try {
 

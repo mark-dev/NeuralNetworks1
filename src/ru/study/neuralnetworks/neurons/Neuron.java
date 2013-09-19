@@ -22,6 +22,15 @@ public abstract class Neuron {
     private byte type;
     private final int requiredInputs;
     private String label;
+    private boolean isOutPassed = false;
+
+    public void setOutPassed(boolean outPassed) {
+        isOutPassed = outPassed;
+    }
+
+    public boolean isOutPassed() {
+        return isOutPassed;
+    }
 
     public void setLabel(String label) {
         this.label = label;

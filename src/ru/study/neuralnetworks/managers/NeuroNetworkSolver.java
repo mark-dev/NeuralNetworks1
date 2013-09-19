@@ -21,13 +21,18 @@ public class NeuroNetworkSolver {
         this.network = network;
     }
 
-    public ArrayList<Neuron> solve() {
+    public ArrayList<Neuron> solve() throws Exception {
         ArrayList<Neuron> allVertex = new ArrayList<Neuron>(network.getVertices());
 
         //Результат остановки цикла = все нейроны обсчитали свои входы
         while (!isAllNeuronsReady(allVertex)) {
 
-            ArrayList<Neuron> ready = getReadyNeurons(allVertex);
+            ArrayList<Neuron> ready = getReadyAndNonPassedNeurons(allVertex);
+            //Если нету нейронов которые обсчитали свои входы и не передали значение -
+            //значит ошибка в построении схемы
+            if(ready.isEmpty()){
+                throw new IllegalArgumentException("wrong network");
+            }
             //Передаем результат готовых нейронов дальше
             for (Neuron source : ready) {
                 //Это список всех путей выходящих из готовой вершины
@@ -36,15 +41,13 @@ public class NeuroNetworkSolver {
                     //destination - вершина, в которую надо передать значение готового нейрона
                     Neuron destination = network.getOpposite(source, outEdge);
                     NeuroInput input = new NeuroInput(source, outEdge.getWeight());
-                    destination.addInput(input); //Не добавится если точно такой же NeuroInput существует уже.
+                    destination.addInput(input);
                 }
+                source.setOutPassed(true);
             }
             // Если схемма потроенна правильно -
             // после этого одному из нейронов будет достаточно данных для расчета,
             // он расчитает свой выход, и список готовых нейтронов пополнится
-            // И все повторится - комуто передадутся его данные
-            // Быдлокод... Данные о готовности передаются повторно..
-            // Отсекаются за счет того что используется hashset в neuron
         }
         return getFinalVertex(allVertex);
     }
@@ -59,23 +62,20 @@ public class NeuroNetworkSolver {
         return finalVertex;
     }
 
-    //@return true если все нейроны в списке имеют выходные значения(т.е. уже обсчитали их)
-    private boolean isNeuronsHasOutputs(ArrayList<Neuron> neurons) {
-        if (neurons.isEmpty()) {
-            return true;
-        }
-        for (Neuron neuron : neurons) {
-            if (!neuron.hasOut()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private boolean isAllNeuronsReady(ArrayList<Neuron> allVertex) {
         return getReadyNeurons(allVertex).size() == network.getVertexCount();
     }
-
+     //Вернет нейроны которые обсчитали свои входы и еще не передали их
+    private ArrayList<Neuron> getReadyAndNonPassedNeurons(ArrayList<Neuron> neurons) {
+        ArrayList<Neuron> ready = new ArrayList<Neuron>();
+        for (Neuron neuron : neurons) {
+            if (neuron.hasOut() && !neuron.isOutPassed()) {
+                ready.add(neuron);
+            }
+        }
+        return ready;
+    }
+    //вернет нейроны которые обсчитали все свои входы
     private ArrayList<Neuron> getReadyNeurons(ArrayList<Neuron> neurons) {
         ArrayList<Neuron> ready = new ArrayList<Neuron>();
         for (Neuron neuron : neurons) {
