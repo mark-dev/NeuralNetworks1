@@ -125,8 +125,10 @@ public class MainFrame extends JFrame {
     }
 
     private void buildNetwork(double[] values) throws Exception {
+        boolean isFirstClick = true;
         if (sp != null) {
             panelCenter.remove(sp);
+            isFirstClick = false;
         }
         ComporatorNetworkBuilder comporatorNetworkBuilder = new ComporatorNetworkBuilder();
         ComporatorInfo ci = comporatorNetworkBuilder.buildFromDoubleArray(values);
@@ -135,7 +137,15 @@ public class MainFrame extends JFrame {
         VisualizationViewer vs = getVIS(neuroNetwork);
         sp = new GraphZoomScrollPane(vs);
         panelCenter.add(sp, BorderLayout.CENTER);
-        panelCenter.setPreferredSize(vs.getPreferredSize());
+
+        if (isFirstClick) {
+            panelCenter.setPreferredSize(vs.getPreferredSize());
+        }
+        else
+        {
+            //Чтобы размер окна не увеличивался, если его уменьшили
+            panelCenter.setPreferredSize(panelCenter.getSize());
+        }
         setResult(ci);
         pack();
     }
