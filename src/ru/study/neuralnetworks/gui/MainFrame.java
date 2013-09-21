@@ -113,7 +113,7 @@ public class MainFrame extends JFrame {
     private void buttonRandomActionPerformed() {
         StringBuilder sb = new StringBuilder();
         Random randomGenerator = new Random();
-        int max = randomGenerator.nextInt(8)+2;
+        int max = randomGenerator.nextInt(8) + 2;
         for (int i = 0; i < max; i++) {
             sb.append(randomGenerator.nextInt(100));
             if (!(i == (max - 1))) {
@@ -134,7 +134,7 @@ public class MainFrame extends JFrame {
         new NeuroNetworkSolver(neuroNetwork).solve();
         VisualizationViewer vs = getVIS(neuroNetwork);
         sp = new GraphZoomScrollPane(vs);
-        panelCenter.add(sp,BorderLayout.CENTER);
+        panelCenter.add(sp, BorderLayout.CENTER);
         panelCenter.setPreferredSize(vs.getPreferredSize());
         setResult(ci);
         pack();
@@ -156,7 +156,8 @@ public class MainFrame extends JFrame {
     private void buttonOkActionPerformed() {
         try {
             double[] values = parseInput();
-            buildNetwork(values);
+            if (values.length > 1)
+                buildNetwork(values);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -190,9 +191,9 @@ public class MainFrame extends JFrame {
             public Paint transform(Neuron neuron) {
                 if (neuron instanceof BlackNeuron)
                     return new Color(101, 96, 96);
-                else if(neuron instanceof WhiteNeuron)
+                else if (neuron instanceof WhiteNeuron)
                     return new Color(187, 247, 250);
-                else if(neuron instanceof VirtualNeuron)
+                else if (neuron instanceof VirtualNeuron)
                     return new Color(240, 160, 65);
                 else return Color.RED;
             }

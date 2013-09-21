@@ -6,6 +6,7 @@ import ru.study.neuralnetworks.entity.NeuronEdge;
 import ru.study.neuralnetworks.neurons.Neuron;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,31 +24,37 @@ public class NeuroNetworkSolver {
 
     public ArrayList<Neuron> solve() throws Exception {
         ArrayList<Neuron> allVertex = new ArrayList<Neuron>(network.getVertices());
-
-        //Результат остановки цикла = все нейроны обсчитали свои входы
-        while (!isAllNeuronsReady(allVertex)) {
-
-            ArrayList<Neuron> ready = getReadyAndNonPassedNeurons(allVertex);
-            //Если нету нейронов которые обсчитали свои входы и не передали значение -
-            //значит ошибка в построении схемы
-            if(ready.isEmpty()){
-                throw new IllegalArgumentException("wrong network");
-            }
+        /*
+            Сначала получаем список всех нейронов которые имеют значение
+            как правило это виртуальные нейроны которым назначили значение
+         */
+        LinkedList<Neuron> ready = getReadyNeurons(allVertex);
+        /*
+            Условие остановки цикла = все нейроны обсчитали свои входы
+            Ну или же схема построена не правильно
+        */
+        while (!ready.isEmpty()) {
+            /*
+                Это список нейронов которые при получении
+                сигнала на этой итерации, обсчитали свой выход
+            */
+            LinkedList<Neuron> newReady = new LinkedList<Neuron>();
             //Передаем результат готовых нейронов дальше
             for (Neuron source : ready) {
-                //Это список всех путей выходящих из готовой вершины
+                //Это список всех ребер выходящих из вершины source
                 ArrayList<NeuronEdge> outEdges = new ArrayList<NeuronEdge>(network.getOutEdges(source));
                 for (NeuronEdge outEdge : outEdges) {
-                    //destination - вершина, в которую надо передать значение готового нейрона
+                    //destination - вершина на другом конце ребра
                     Neuron destination = network.getOpposite(source, outEdge);
-                    NeuroInput input = new NeuroInput(source, outEdge.getWeight());
-                    destination.addInput(input);
+                    NeuroInput input = new NeuroInput(source, outEdge);
+                    //Этот нейрон обсчитал свой выход
+                    if (destination.addInput(input)) {
+                        newReady.add(destination);
+                    }
                 }
-                source.setOutPassed(true);
+                //Далее работаем только с теми нейронами, что обсчитали свое значение
+                ready = newReady;
             }
-            // Если схемма потроенна правильно -
-            // после этого одному из нейронов будет достаточно данных для расчета,
-            // он расчитает свой выход, и список готовых нейтронов пополнится
         }
         return getFinalVertex(allVertex);
     }
@@ -62,22 +69,9 @@ public class NeuroNetworkSolver {
         return finalVertex;
     }
 
-    private boolean isAllNeuronsReady(ArrayList<Neuron> allVertex) {
-        return getReadyNeurons(allVertex).size() == network.getVertexCount();
-    }
-     //Вернет нейроны которые обсчитали свои входы и еще не передали их
-    private ArrayList<Neuron> getReadyAndNonPassedNeurons(ArrayList<Neuron> neurons) {
-        ArrayList<Neuron> ready = new ArrayList<Neuron>();
-        for (Neuron neuron : neurons) {
-            if (neuron.hasOut() && !neuron.isOutPassed()) {
-                ready.add(neuron);
-            }
-        }
-        return ready;
-    }
     //вернет нейроны которые обсчитали все свои входы
-    private ArrayList<Neuron> getReadyNeurons(ArrayList<Neuron> neurons) {
-        ArrayList<Neuron> ready = new ArrayList<Neuron>();
+    private LinkedList<Neuron> getReadyNeurons(ArrayList<Neuron> neurons) {
+        LinkedList<Neuron> ready = new LinkedList<Neuron>();
         for (Neuron neuron : neurons) {
             if (neuron.hasOut()) {
                 ready.add(neuron);

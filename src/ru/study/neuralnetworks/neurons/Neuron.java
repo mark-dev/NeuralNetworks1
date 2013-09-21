@@ -2,6 +2,7 @@ package ru.study.neuralnetworks.neurons;
 
 import ru.study.neuralnetworks.entity.NeuroInput;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 /**
@@ -12,25 +13,15 @@ import java.util.HashSet;
  * To change this template use File | Settings | File Templates.
  */
 public abstract class Neuron {
-    public static byte NEURON_TYPE_OPENING = 1;
     public static final byte NEURON_TYPE_FINAL = 2;
     public static final byte NEURON_TYPE_MEDIUM = 3;
     public static final byte NEURON_TYPE_VIRTUAL = 4;
 
-    private final HashSet<NeuroInput> in = new HashSet<NeuroInput>();
+    private final ArrayList<NeuroInput> in = new ArrayList<NeuroInput>();
     private Double out = null;
     private byte type;
     private final int requiredInputs;
     private String label;
-    private boolean isOutPassed = false;
-
-    public void setOutPassed(boolean outPassed) {
-        isOutPassed = outPassed;
-    }
-
-    public boolean isOutPassed() {
-        return isOutPassed;
-    }
 
     public void setLabel(String label) {
         this.label = label;
@@ -85,7 +76,7 @@ public abstract class Neuron {
 
     protected abstract double processInputs(double sum);
 
-    private double sumInputs(HashSet<NeuroInput> inputs) {
+    private double sumInputs(ArrayList<NeuroInput> inputs) {
         double sum = 0;
         for (NeuroInput input : inputs) {
             sum = sum + input.getValue() * input.getWeight();
